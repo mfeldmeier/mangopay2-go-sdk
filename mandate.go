@@ -26,6 +26,8 @@ type CreateMandate struct {
 	ReturnURL     string `json:"ReturnURL"`
 }
 
+
+
 func (m *MangoPay) CreateNewMandate(data CreateMandate) (Mandate, error) {
 	var action = actionCreateMandate
 
@@ -46,7 +48,7 @@ func (m *MangoPay) CreateNewMandate(data CreateMandate) (Mandate, error) {
 		return Mandate{}, err
 	}
 
-	return createdMandate.(Mandate), nil
+	return *createdMandate.(*Mandate), nil
 }
 
 // ViewMandate view a created Mandate by ID
@@ -58,5 +60,17 @@ func (m *MangoPay) ViewMandate(mandateID string) (Mandate, error) {
 		return Mandate{}, err
 	}
 
-	return fetchedMandate.(Mandate), nil
+	return *fetchedMandate.(*Mandate), nil
+}
+
+// CancelMandate view a created Mandate by ID
+func (m *MangoPay) CancelMandate(mandateID string) (interface{}, error) {
+	var action = actionCancelMandate
+
+	canceledMandate, err := m.anyRequest(Mandate{}, action, JsonObject{"MandateID": mandateID})
+	if err != nil {
+		return Mandate{}, err
+	}
+
+	return canceledMandate, nil
 }
