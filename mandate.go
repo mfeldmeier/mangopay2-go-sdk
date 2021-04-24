@@ -12,7 +12,7 @@ type Mandate struct {
 	Culture       string `json:"Culture"`
 	Scheme        string `json:"Scheme"`
 	Status        string `json:"Status"`
-	CreationDate  string `json:"CreationDate"`
+	CreationDate  int64  `json:"CreationDate"`
 	MandateType   string `json:"MandateType"`
 	ExecutionType string `json:"ExecutionType"`
 	Tag           string `json:"Tag"`
@@ -60,5 +60,3 @@ func (m *MangoPay) ViewMandate(mandateID string) (Mandate, error) {
 
 	return fetchedMandate.(Mandate), nil
 }
-
-
