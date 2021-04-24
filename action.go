@@ -64,6 +64,13 @@ const (
 	actionUpdateHook
 	actionFetchHook
 	actionFetchAllHooks
+
+	actionCreateMandate
+	actionViewMandate
+	actionCancelMandate
+	actionListAllMandates
+	actionListUsersMandates
+	actionBankAccountsMandates
 )
 
 // JsonObject is used to manage JSON data.
@@ -296,5 +303,35 @@ var mangoRequests = map[mangoAction]mangoRequest{
 		"GET",
 		"/hooks/",
 		nil,
+	},
+	actionCreateMandate: {
+		"POST",
+		"/mandates/directdebit/web/",
+		nil,
+	},
+	actionViewMandate: {
+		"GET",
+		"/mandates/{{MandateID}}/",
+		JsonObject{"MandateID": ""},
+	},
+	actionCancelMandate: {
+		"PUT",
+		"/mandates/{{MandateID}}/cancel/",
+		JsonObject{"MandateID": ""},
+	},
+	actionListAllMandates: {
+		"GET",
+		"/mandates/",
+		nil,
+	},
+	actionListUsersMandates: {
+		"GET",
+		"/users/{{UserID}}/mandates/",
+		JsonObject{"UserID": ""},
+	},
+	actionBankAccountsMandates: {
+		"GET",
+		"/users/{{UserID}}/bankaccounts/{{BankAccountID}}/mandates/",
+		JsonObject{"UserID": "", "BankAccountID": ""},
 	},
 }

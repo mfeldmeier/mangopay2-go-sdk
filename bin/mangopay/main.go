@@ -12,13 +12,12 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/mfeldmeier/mangopay2-go-sdk"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
-
-	"github.com/gotsunami/mangopay2-go-sdk"
 )
 
 func perror(msg string) {
@@ -418,7 +417,7 @@ Options:
 			&mango.Wallet{
 				ProcessIdent: mango.ProcessIdent{Id: w.CreditedWalletId},
 			},
-			w.ReturnUrl, w.Culture, w.TemplateURLOptions)
+			w.ReturnUrl, w.CardType, w.Culture, w.TemplateURLOptions)
 		if err != nil {
 			perror(err.Error())
 		}

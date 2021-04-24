@@ -9,7 +9,7 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/gotsunami/mangopay2-go-sdk"
+	mango "github.com/mfeldmeier/mangopay2-go-sdk"
 	"log"
 	"os"
 	"strconv"
