@@ -35,6 +35,7 @@ const (
 	actionFetchPayIn
 	actionCreateWebPayIn
 	actionCreateDirectPayIn
+	actionCreateDirectDebitPayIn
 	actionCreateBankwireDirectPayIn
 	actionCreateDirectDebitWebPayIn
 
@@ -333,5 +334,10 @@ var mangoRequests = map[mangoAction]mangoRequest{
 		"GET",
 		"/users/{{UserID}}/bankaccounts/{{BankAccountID}}/mandates/",
 		JsonObject{"UserID": "", "BankAccountID": ""},
+	},
+	actionCreateDirectDebitPayIn: {
+		"POST",
+		"/payins/directdebit/direct/",
+		nil,
 	},
 }

@@ -244,7 +244,7 @@ func (m *MangoPay) NewDirectPayIn(from, to Consumer, src *Card, dst *Wallet, amo
 		return nil, errors.New(msg + "empty return url")
 	}
 
-	var	authorID, creditedUserID string
+	var authorID, creditedUserID string
 	authorID = consumerId(from)
 	if to != nil {
 		creditedUserID = consumerId(to)
@@ -347,6 +347,106 @@ func (m *MangoPay) PayIn(id string) (*WebPayIn, error) {
 		return nil, err
 	}
 	return p.(*WebPayIn), nil
+}
+
+// NewDirectDebitPayIn creates a direct debit payIn.
+//
+//  - author    		 : AuthorId value
+//	- creditor			 : CreditedUserId value (optional, defaults to dst owner)
+//  - credited   		 : CreditedWalletId value
+//  - mandateID			 : SEPA MandateID
+//  - amount    		 : DebitedFunds value
+//  - fees               : Fees value
+//  - statementDescriptor: A custom description to appear on the user's bank statement
+//
+// See https://docs.mangopay.com/endpoints/v2.01/payins#e282_create-a-direct-debit-direct-payin
+func (m *MangoPay) NewDirectDebitPayIn(author Consumer, creditor *Consumer, credited *Wallet, mandateID string, amount, fees Money, statementDescriptor *string) (*DirectDebitPayIn, error) {
+	const errorPrefix = "mango.MangoPay.NewDirectDebitPayIn: "
+	if author == nil {
+		return nil, errors.New(errorPrefix + "Parameter 'author' is nil")
+	}
+	if credited == nil {
+		return nil, errors.New(errorPrefix + "Parameter 'credited' is nil")
+	}
+	if mandateID == "" {
+		return nil, errors.New(errorPrefix + "Parameter 'mandateID' is nil")
+	}
+
+	authorId := consumerId(author)
+	if authorId == "" {
+		return nil, errors.New(errorPrefix + "'author' has empty Id")
+	}
+
+	directDebitPayIn := PayIn{
+		AuthorId:         authorId,
+		CreditedWalletId: credited.Id,
+		service:          m,
+	}
+
+	creditorID := ""
+	if creditor != nil {
+		creditorID = consumerId(*creditor)
+		if creditorID != "" {
+			directDebitPayIn.CreditedUserId = creditorID
+		} else {
+			return nil, errors.New(errorPrefix + "'creditor' has empty Id")
+		}
+	}
+
+	p := &DirectDebitPayIn{
+		PayIn:                directDebitPayIn,
+		DeclaredDebitedFunds: amount,
+		DeclaredFees:         fees,
+		StatementDescriptor:  statementDescriptor,
+		MandateID:            mandateID,
+	}
+	return p, nil
+}
+
+type DirectDebitPayIn struct {
+	PayIn
+	DeclaredDebitedFunds Money   `json:"DebitedFunds"`
+	DeclaredFees         Money   `json:"Fees"`
+	StatementDescriptor  *string `json:",omitempty"`
+	ChargeDate           *int64  `json:",omitempty"`
+	MandateID            string  `json:"MandateId"`
+}
+
+func (p *DirectDebitPayIn) String() string {
+	return struct2string(p)
+}
+
+func (t *DirectDebitPayIn) Save() error {
+	data := JsonObject{}
+	j, err := json.Marshal(t)
+	if err != nil {
+		return err
+	}
+	if err := json.Unmarshal(j, &data); err != nil {
+		return err
+	}
+
+	// Fields not allowed when creating a tranfer.
+	for _, field := range []string{"Id", "CreationDate", "ExecutionDate", "CreditedFunds",
+		"CreditedUserId", "ResultCode", "ResultMessage", "Status", "ExecutionType",
+		"PaymentType", "SecureMode", "Type", "Nature", "ChargeDate"} {
+
+		delete(data, field)
+	}
+
+	tr, err := t.service.anyRequest(new(DirectDebitPayIn), actionCreateDirectDebitPayIn, data)
+	if err != nil {
+		return err
+	}
+	serv := t.service
+	*t = *(tr.(*DirectDebitPayIn))
+	t.service = serv
+	t.PayIn.service = serv
+
+	if t.Status == "FAILED" {
+		return &ErrPayInFailed{t.Id, t.ResultMessage, t.ResultCode}
+	}
+	return nil
 }
 
 func (m *MangoPay) NewBankwireDirectPayIn(author Consumer, credited *Wallet, amount, fees Money) (*BankwireDirectPayIn, error) {
